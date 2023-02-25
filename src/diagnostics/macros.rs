@@ -3,9 +3,9 @@
 ///
 /// Example usage:
 /// ```
-/// use zap::diagnostics::*;
-/// use zap::utils::*;
-/// use zap::define_error;
+/// use chompy::diagnostics::*;
+/// use chompy::utils::*;
+/// use chompy::define_error;
 ///
 /// #[derive(Debug)]
 /// struct MissingSemiColon(Location);
@@ -27,8 +27,8 @@
 #[macro_export]
 macro_rules! define_error {
     ($ty:ty { $build_fn:item $location_fn:item }) => {
-        zap::define_diag!(
-            zap::diagnostics::Severity::Error => $ty {
+        chompy::define_diag!(
+            chompy::diagnostics::Severity::Error => $ty {
                 $build_fn
                 $location_fn
             }
@@ -41,9 +41,9 @@ macro_rules! define_error {
 ///
 /// Example usage:
 /// ```
-/// use zap::diagnostics::*;
-/// use zap::utils::*;
-/// use zap::define_warning;
+/// use chompy::diagnostics::*;
+/// use chompy::utils::*;
+/// use chompy::define_warning;
 ///
 /// #[derive(Debug)]
 /// struct NotSoGood(Location);
@@ -65,8 +65,8 @@ macro_rules! define_error {
 #[macro_export]
 macro_rules! define_warning {
     ($ty:ty { $build_fn:item $location_fn:item }) => {
-        zap::define_diag!(
-            zap::diagnostics::Severity::Error => $ty {
+        chompy::define_diag!(
+            chompy::diagnostics::Severity::Error => $ty {
                 $build_fn
                 $location_fn
             }
@@ -78,9 +78,9 @@ macro_rules! define_warning {
 ///
 /// Example usage:
 /// ```
-/// use zap::diagnostics::*;
-/// use zap::utils::*;
-/// use zap::define_bug;
+/// use chompy::diagnostics::*;
+/// use chompy::utils::*;
+/// use chompy::define_bug;
 ///
 /// #[derive(Debug)]
 /// struct Unstable(Location);
@@ -100,8 +100,8 @@ macro_rules! define_warning {
 #[macro_export]
 macro_rules! define_bug {
     ($ty:ty { $build_fn:item $location_fn:item }) => {
-        zap::define_diag!(
-            zap::diagnostics::Severity::Error => $ty {
+        chompy::define_diag!(
+            chompy::diagnostics::Severity::Error => $ty {
                 $build_fn
                 $location_fn
             }
@@ -115,15 +115,15 @@ macro_rules! define_bug {
 macro_rules! define_diag {
     ($severity:expr => $ty:ty { $build_fn:item $location_fn:item }) => {
 
-        impl zap::diagnostics::Diag for $ty {
-            fn severity(&self) -> zap::diagnostics::Severity {
+        impl chompy::diagnostics::Diag for $ty {
+            fn severity(&self) -> chompy::diagnostics::Severity {
                 $severity
             }
 
             $build_fn
         }
 
-        impl zap::utils::Located for $ty {
+        impl chompy::utils::Located for $ty {
             $location_fn
         }
     };

@@ -1,4 +1,4 @@
-//! Zap provides a series of utilities used to create parsers. This crate is primarily developed to
+//! chompy provides a series of utilities used to create parsers. This crate is primarily developed to
 //! assist with the specific needs of my own projects but aspires to be robust enough to serve any
 //! user interested in creating a parser quickly.
 
@@ -10,16 +10,19 @@
 #![warn(clippy::todo)]
 #![warn(clippy::unimplemented)]
 #![warn(clippy::undocumented_unsafe_blocks)]
+#![allow(clippy::module_inception)]
 
 /// Tools for creating tokens and lexers.
 pub mod lex {
-    mod lexer;
+    mod lex;
     mod tok;
-    pub use lexer::*;
+    mod char_stream;
+    pub use lex::*;
     pub use tok::*;
+    pub use char_stream::*;
 }
 
-/// Common utilities shared across the different elements of zap.
+/// Common utilities shared across the different elements of chompy.
 pub mod utils {
     mod files;
     mod location;
@@ -27,7 +30,7 @@ pub mod utils {
     pub use location::*;
 }
 
-/// Handles the creation and management of user-driven errors with zap.
+/// Handles the creation and management of user-driven errors with chompy.
 pub mod diagnostics {
     mod diag;
     mod macros;
@@ -35,4 +38,10 @@ pub mod diagnostics {
     pub use diag::*;
     pub use macros::*;
     pub use utils::*;
+}
+
+#[cfg(test)]
+mod tests {
+    mod lex;
+    mod utils;
 }

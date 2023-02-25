@@ -3,9 +3,9 @@ use static_assertions::assert_obj_safe;
 use std::fmt::Debug;
 
 assert_obj_safe!(Diag);
-/// The core trait used to create user-facing diagnostics in zap. The macros [crate::define_error],
-/// [crate::define_warning], and [crate::define_bug] can be utilized to implement this to your
-/// types.
+/// The core trait used to create user-facing diagnostics in chompy. The macros
+/// [crate::define_error], [crate::define_warning], and [crate::define_bug] can be utilized to
+/// implement this to your types.
 pub trait Diag: Debug + Send + Sync {
     /// Returns the [Severity] of this Diag.
     fn severity(&self) -> Severity;

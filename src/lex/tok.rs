@@ -12,10 +12,16 @@ pub struct Tok<K: TokenKind + Display> {
     kind: K,
     location: Location,
 }
+
 impl<K: TokenKind + Display> Tok<K> {
     /// Creates a new Tok with the provided kind and location.
     pub fn new(kind: K, location: Location) -> Self {
         Self { kind, location }
+    }
+
+    /// Returns a reference to the inner TokenKind of this Tok.
+    pub fn kind(&self) -> &K {
+        &self.kind
     }
 }
 
@@ -42,6 +48,7 @@ impl<K: TokenKind + Display> Display for Tok<K> {
         self.kind.fmt(f)
     }
 }
+
 impl<K: TokenKind + Display> From<Tok<K>> for String {
     fn from(val: Tok<K>) -> Self {
         val.to_string()

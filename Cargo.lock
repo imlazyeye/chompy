@@ -85,6 +85,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "chompy"
+version = "0.0.0"
+dependencies = [
+ "bitflags",
+ "codespan-reporting",
+ "colored",
+ "hashbrown 0.13.2",
+ "itertools",
+ "lazy_static",
+ "parking_lot",
+ "peekmore",
+ "pretty_assertions",
+ "rand",
+ "static_assertions",
+ "tokio",
+]
+
+[[package]]
 name = "codespan-reporting"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -320,6 +338,12 @@ dependencies = [
  "thread-id",
  "windows-sys 0.45.0",
 ]
+
+[[package]]
+name = "peekmore"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ca84ba11ed2de09f9a946e35be5efe5382bdd0621780b46ea8e24a7797b5be88"
 
 [[package]]
 name = "petgraph"
@@ -664,20 +688,3 @@ name = "yansi"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09041cd90cf85f7f8b2df60c646f853b7f535ce68f85244eb6731cf89fa498ec"
-
-[[package]]
-name = "zap"
-version = "0.1.0"
-dependencies = [
- "bitflags",
- "codespan-reporting",
- "colored",
- "hashbrown 0.13.2",
- "itertools",
- "lazy_static",
- "parking_lot",
- "pretty_assertions",
- "rand",
- "static_assertions",
- "tokio",
-]
