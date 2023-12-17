@@ -27,8 +27,8 @@
 #[macro_export]
 macro_rules! define_error {
     ($ty:ty { $build_fn:item $location_fn:item }) => {
-        chompy::define_diag!(
-            chompy::diagnostics::Severity::Error => $ty {
+        $crate::define_diag!(
+            $crate::diagnostics::Severity::Error => $ty {
                 $build_fn
                 $location_fn
             }
@@ -100,8 +100,8 @@ macro_rules! define_warning {
 #[macro_export]
 macro_rules! define_bug {
     ($ty:ty { $build_fn:item $location_fn:item }) => {
-        chompy::define_diag!(
-            chompy::diagnostics::Severity::Error => $ty {
+        $crate::define_diag!(
+            $crate::diagnostics::Severity::Error => $ty {
                 $build_fn
                 $location_fn
             }
@@ -115,15 +115,15 @@ macro_rules! define_bug {
 macro_rules! define_diag {
     ($severity:expr => $ty:ty { $build_fn:item $location_fn:item }) => {
 
-        impl chompy::diagnostics::Diag for $ty {
-            fn severity(&self) -> chompy::diagnostics::Severity {
+        impl $crate::diagnostics::Diag for $ty {
+            fn severity(&self) -> $crate::diagnostics::Severity {
                 $severity
             }
 
             $build_fn
         }
 
-        impl chompy::utils::Located for $ty {
+        impl $crate::utils::Located for $ty {
             $location_fn
         }
     };

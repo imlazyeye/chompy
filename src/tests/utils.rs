@@ -1,6 +1,6 @@
 use crate::{
     lex::{CharStream, Lex, LexError, Tok, TokenKind},
-    utils::Location,
+    utils::{Location, Span},
 };
 
 #[macro_export]
@@ -56,6 +56,7 @@ macro_rules! test_lex_err {
 pub struct Lexer {
     source: &'static str,
     char_stream: CharStream,
+    file_id: usize,
 }
 
 impl Lexer {
@@ -63,6 +64,7 @@ impl Lexer {
         Self {
             source,
             char_stream: CharStream::new(source),
+            file_id: 0,
         }
     }
 }
@@ -78,11 +80,7 @@ impl Lex<Tok<TokKind>, TokKind> for Lexer {
 
     fn lex(&mut self) -> Result<Option<Tok<TokKind>>, LexError> {
         let start_pos = self.char_stream.position();
-        if self
-            .char_stream
-            .match_chomp_with(|c| c.is_whitespace())
-            .is_some()
-        {
+        if self.char_stream.match_chomp_with(|c| c.is_whitespace()) {
             return self.lex();
         }
         let kind = if let Some(hex) = self.construct_hex("0x") {
@@ -93,7 +91,7 @@ impl Lex<Tok<TokKind>, TokKind> for Lexer {
             TokKind::Int(int)
         } else if let Some(string) = self.construct_string(&['"', '\''], &['\\']) {
             TokKind::String(string?)
-        } else if let Some(string) = self.construct_comment("//") {
+        } else if let Some(string) = self.construct_comment(&["//"]) {
             TokKind::Comment(string)
         } else if let Some(ident) = self.construct_ident() {
             match ident {
@@ -104,22 +102,32 @@ impl Lex<Tok<TokKind>, TokKind> for Lexer {
         } else if let Some(chr) = self.chomp() {
             match chr {
                 '=' => {
-                    if self.match_chomp('=').is_some() {
+                    if self.match_chomp('=') {
                         TokKind::DoubleEqual
                     } else {
                         TokKind::Equal
                     }
                 }
                 ';' => TokKind::SemiColon,
-                _ => return Err(LexError::UnexpectedChar(chr)),
+                _ => {
+                    return Err(LexError::UnexpectedChar(Location::new(
+                        self.file_id,
+                        Span::new(start_pos, self.char_stream.position()),
+                    )));
+                }
             }
         } else {
             return Ok(None);
         };
+
         Ok(Some(Tok::new(
             kind,
             Location::new(0, start_pos..self.char_stream.position()),
         )))
+    }
+
+    fn file_id(&self) -> crate::utils::FileId {
+        self.file_id
     }
 }
 

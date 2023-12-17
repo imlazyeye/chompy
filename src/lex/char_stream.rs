@@ -21,27 +21,29 @@ impl CharStream {
 
     /// Returns the next char in the stream and advances forward.
     pub fn chomp(&mut self) -> Option<char> {
-        let Some(next) = self.iter.next() else { return None };
+        let Some(next) = self.iter.next() else {
+            return None;
+        };
         self.true_cursor += 1;
-        self.peek_cursor += 1;
+        self.peek_cursor = self.true_cursor;
         Some(next)
     }
 
     /// Chomps the next char if it matches the expected one.
-    pub fn match_chomp(&mut self, expected: char) -> Option<char> {
+    pub fn match_chomp(&mut self, expected: char) -> bool {
         if self.match_peek_with(|c| c == expected) {
-            self.chomp()
+            self.chomp().is_some()
         } else {
-            None
+            false
         }
     }
 
     /// Chomps the next char if it satisfies the provided closure.
-    pub fn match_chomp_with<F: FnOnce(char) -> bool>(&mut self, f: F) -> Option<char> {
+    pub fn match_chomp_with<F: FnOnce(char) -> bool>(&mut self, f: F) -> bool {
         if self.match_peek_with(f) {
-            self.chomp()
+            self.chomp().is_some()
         } else {
-            None
+            false
         }
     }
 

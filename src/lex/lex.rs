@@ -1,3 +1,5 @@
+use crate::utils::{FileId, Location, Span};
+
 use super::{CharStream, Token};
 
 /// A set of utilities to construct a lexer. After providing the neccesary references, the bulk of
@@ -8,6 +10,9 @@ pub trait Lex<T: Token<K>, K> {
 
     /// Returns a reference to the iterator over the characters of the source.
     fn char_stream(&mut self) -> &mut CharStream;
+
+    /// Returns the [crate::utils::FileId] of the file this lexer is working within.
+    fn file_id(&self) -> FileId;
 
     /// The primary function for lexxing the next token in the stream.
     fn lex(&mut self) -> Result<Option<T>, LexError>;
@@ -20,7 +25,7 @@ pub trait Lex<T: Token<K>, K> {
     }
 
     /// Chomps the next char if it matches the one provided.
-    fn match_chomp(&mut self, chr: char) -> Option<char> {
+    fn match_chomp(&mut self, chr: char) -> bool {
         self.char_stream().match_chomp(chr)
     }
 
@@ -28,6 +33,9 @@ pub trait Lex<T: Token<K>, K> {
     fn chomp(&mut self) -> Option<char> {
         self.char_stream().chomp()
     }
+
+    // todo: all the bools on the below functions should be replaced with a bitflag configuration
+    // struct that can be gotten with `self.config()`
 
     /// Chomps every char that is either alphanumeric or an underscore, returning the resulting
     /// slice. If the first char found is not alphanumeric, None is returned.
@@ -57,7 +65,7 @@ pub trait Lex<T: Token<K>, K> {
             let mut found_dot = false;
             let mut found_trailing_digit = false;
             let slice = loop {
-                match stream.peek_move() {
+                match stream.peek() {
                     Some('_') if allow_underscore => {}
                     Some('.') if !found_dot => {
                         found_dot = true;
@@ -72,6 +80,7 @@ pub trait Lex<T: Token<K>, K> {
                     }
                     _ => break None,
                 }
+                stream.advance();
             };
 
             if let Some(float) = slice.and_then(|v| v.replace('_', "").parse::<f64>().ok()) {
@@ -99,8 +108,12 @@ pub trait Lex<T: Token<K>, K> {
         quote_chars: &[char],
         escape_chars: &[char],
     ) -> Option<Result<&'static str, LexError>> {
+        let file_id = self.file_id();
         let stream = self.char_stream();
-        let Some(opening_delim) = stream.peek_move() else { return None };
+        let start = stream.position();
+        let Some(opening_delim) = stream.peek_move() else {
+            return None;
+        };
         if !quote_chars.contains(&opening_delim) {
             stream.reset_peeks();
             None
@@ -109,11 +122,14 @@ pub trait Lex<T: Token<K>, K> {
             loop {
                 match stream.peek_move() {
                     None => {
-                        let slice = stream.empty_peeks();
-                        break Some(Err(LexError::UnterminatedString(slice)));
+                        let location =
+                            Location::new(file_id, Span::new(start, stream.peek_position()));
+                        break Some(Err(LexError::UnterminatedString(location)));
                     }
                     Some(chr) if chr == opening_delim && !in_escape => {
-                        break Some(Ok(stream.chomp_peeks()));
+                        let slice = stream.slice((start + 1)..stream.peek_position() - 1);
+                        stream.chomp_peeks();
+                        break Some(Ok(slice));
                     }
                     Some(chr) if escape_chars.contains(&chr) && !in_escape => in_escape = true,
                     _ => {}
@@ -128,15 +144,19 @@ pub trait Lex<T: Token<K>, K> {
     /// If the prefix is not fulfilled None is returned. If the first character following the prefix
     /// is not valid hex, an error is returned within the Some().
     fn construct_hex(&mut self, prefix: &str) -> Option<Result<&'static str, LexError>> {
+        let file_id = self.file_id();
         let stream = self.char_stream();
+        let start = stream.position();
         if !prefix.chars().all(|p| stream.match_peek(p)) {
             stream.reset_peeks();
             None
         } else {
             while stream.match_peek_with(|c| c.is_ascii_hexdigit()) {}
-            let slice = stream.chomp_peeks();
+            let slice = stream.slice(dbg!((start + 2)..stream.peek_position()));
+            stream.chomp_peeks();
             if slice.is_empty() {
-                Some(Err(LexError::InvalidHex(slice)))
+                let location = Location::new(file_id, Span::new(start, stream.peek_position()));
+                Some(Err(LexError::InvalidHex(location)))
             } else {
                 Some(Ok(slice))
             }
@@ -146,11 +166,14 @@ pub trait Lex<T: Token<K>, K> {
     /// Chomps every char that follows the prefix. This will continue across multiple lines, meaning
     /// if you call this with two lines of comments ahead of you, both will be returned in this
     /// one call.
-    fn construct_comment(&mut self, prefix: &str) -> Option<&'static str> {
+    fn construct_comment(&mut self, prefixes: &[&str]) -> Option<&'static str> {
         let start = self.char_stream().position();
         let mut found_any = false;
         loop {
-            if !prefix.chars().all(|p| self.char_stream().match_peek(p)) {
+            if !prefixes
+                .iter()
+                .any(|prefix| prefix.chars().all(|p| self.char_stream().match_peek(p)))
+            {
                 self.char_stream().reset_peeks();
                 break;
             } else {
@@ -200,10 +223,10 @@ pub trait Lex<T: Token<K>, K> {
 #[derive(Debug, Clone, PartialEq)]
 pub enum LexError {
     /// A string that was never closed before the end of the file.
-    UnterminatedString(&'static str),
+    UnterminatedString(Location),
     /// A series of chars that begun with the hex-prefix but did not subsequently provide valid hex
     /// chars (i.e.: `0xQRS`).
-    InvalidHex(&'static str),
+    InvalidHex(Location),
     /// A char which satsified no rules within the lexer.
-    UnexpectedChar(char),
+    UnexpectedChar(Location),
 }
