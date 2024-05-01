@@ -207,6 +207,18 @@ pub trait Lex<T: Token<K>, K> {
         stream.slice(start..forward_position)
     }
 
+    /// Chomps the next chars if they continously fulfill the pattern str provided.
+    fn chomp_pattern(&mut self, pattern: &str) -> bool {
+        let stream = self.char_stream();
+        if pattern.chars().all(|v| stream.match_peek(v)) {
+            stream.chomp_peeks();
+            true
+        } else {
+            stream.reset_peeks();
+            false
+        }
+    }
+
     /// Chomps every char that fulfills the provided closure, then returns a slice of the chars
     /// from the provided start position to the final position reached.
     fn construct<F>(&mut self, mut f: F) -> &'static str
