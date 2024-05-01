@@ -37,7 +37,7 @@ impl CharStream {
     }
 
     /// Chomps the next char if it satisfies the provided closure.
-    pub fn match_chomp_with<F: FnOnce(char) -> bool>(&mut self, f: F) -> bool {
+    pub fn match_chomp_with<F: FnMut(char) -> bool>(&mut self, f: F) -> bool {
         if self.match_peek_with(f) {
             self.chomp().is_some()
         } else {
@@ -56,7 +56,7 @@ impl CharStream {
     }
 
     /// Returns if the next char if it satisfies the provided closure.
-    pub fn match_peek_with<F: FnOnce(char) -> bool>(&mut self, f: F) -> bool {
+    pub fn match_peek_with<F: FnMut(char) -> bool>(&mut self, mut f: F) -> bool {
         let Some(c) = self.peek() else { return false };
         if f(c) {
             self.advance();
@@ -64,6 +64,16 @@ impl CharStream {
         } else {
             false
         }
+    }
+
+    /// Continously peeks while the given condition is met. Returns if the condition was satisifed
+    /// on at least one char.
+    pub fn peek_while<F: FnMut(char) -> bool>(&mut self, mut f: F) -> bool {
+        let mut any = false;
+        while self.match_peek_with(&mut f) {
+            any = true
+        }
+        any
     }
 
     /// Peeks, then advances the peek cursor by one.
