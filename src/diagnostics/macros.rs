@@ -65,12 +65,12 @@ macro_rules! define_error {
 #[macro_export]
 macro_rules! define_warning {
     ($ty:ty { $build_fn:item $location_fn:item }) => {
-        chompy::define_diag!(
-            chompy::diagnostics::Severity::Error => $ty {
+        $crate::define_diag!(
+            $crate::diagnostics::Severity::Warning => $ty {
                 $build_fn
                 $location_fn
             }
-        )
+        );
     };
 }
 
@@ -125,6 +125,23 @@ macro_rules! define_diag {
 
         impl $crate::utils::Located for $ty {
             $location_fn
+        }
+
+        impl std::fmt::Debug for $ty {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.pad(
+                    &<$ty as $crate::diagnostics::Diag>::build(
+                        &self, 
+                        $crate::diagnostics::Builder::new(
+                            <$ty as $crate::diagnostics::Diag>::severity(&self)
+                        )
+                    )
+                        .labels
+                        .iter()
+                        .map(|v| v.message.clone())
+                        .join(", "),
+                )
+            }
         }
     };
 }

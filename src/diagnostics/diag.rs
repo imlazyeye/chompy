@@ -17,8 +17,13 @@ pub trait Diag: Debug + Send + Sync {
 pub type Result<T> = std::result::Result<T, DiagBox>;
 
 /// Container for dynamically dispatched implementers of [Diag].
-#[derive(Debug)]
 pub struct DiagBox(Box<dyn Diag + Send + Sync>);
+
+impl std::fmt::Debug for DiagBox {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
 
 impl<E> From<E> for DiagBox
 where

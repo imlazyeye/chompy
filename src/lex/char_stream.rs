@@ -2,6 +2,7 @@ use peekmore::{PeekMore, PeekMoreIterator};
 use std::{ops::RangeBounds, str::Chars};
 
 /// A wrapper of the needed iterators for [Lex]'s char stream.
+#[derive(Debug, Clone)]
 pub struct CharStream {
     source: &'static str,
     iter: PeekMoreIterator<Chars<'static>>,

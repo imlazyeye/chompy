@@ -4,7 +4,7 @@ use super::FileId;
 use std::ops::Range;
 
 /// A location for something in fog, combining a span and a file id.
-#[derive(Debug, PartialEq, Eq, Default, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Default, Copy, Clone, Hash)]
 pub struct Location {
     file_id: FileId,
     span: Span,
@@ -37,11 +37,15 @@ impl Located for Location {
 
 /// A Span is used to notate a specific range of characters in source code to later inform users the
 /// exact location of diagnostics.
-#[derive(Debug, PartialEq, Eq, Default, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Default, Copy, Clone, Hash)]
 pub struct Span(usize, usize);
 impl Span {
     /// Creates a new span.
     pub fn new(start: usize, end: usize) -> Self {
+        // assert!(
+        //     start <= end,
+        //     "Attempted to make a Span with an ending lower than its start ({start} -> {end})"
+        // );
         Self(start, end)
     }
 
