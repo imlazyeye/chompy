@@ -1,6 +1,6 @@
-//! chompy provides a series of utilities used to create parsers. This crate is primarily developed to
-//! assist with the specific needs of my own projects but aspires to be robust enough to serve any
-//! user interested in creating a parser quickly.
+//! chompy provides a series of utilities used to create parsers. This crate is primarily developed
+//! to assist with the specific needs of my own projects but aspires to be robust enough to serve
+//! any user interested in creating a parser quickly.
 
 #![warn(missing_docs)]
 #![warn(clippy::dbg_macro)]
@@ -14,12 +14,12 @@
 
 /// Tools for creating tokens and lexers.
 pub mod lex {
+    mod char_stream;
     mod lex;
     mod tok;
-    mod char_stream;
+    pub use char_stream::*;
     pub use lex::*;
     pub use tok::*;
-    pub use char_stream::*;
 }
 
 /// Common utilities shared across the different elements of chompy.
@@ -36,7 +36,6 @@ pub mod diagnostics {
     mod macros;
     mod utils;
     pub use diag::*;
-    pub use macros::*;
     pub use utils::*;
 }
 

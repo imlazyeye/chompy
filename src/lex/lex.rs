@@ -111,9 +111,7 @@ pub trait Lex<T: Token<K>, K> {
         let file_id = self.file_id();
         let stream = self.char_stream();
         let start = stream.position();
-        let Some(opening_delim) = stream.peek_move() else {
-            return None;
-        };
+        let opening_delim = stream.peek_move()?;
         if !quote_chars.contains(&opening_delim) {
             stream.reset_peeks();
             None
@@ -152,7 +150,7 @@ pub trait Lex<T: Token<K>, K> {
             None
         } else {
             while stream.match_peek_with(|c| c.is_ascii_hexdigit()) {}
-            let slice = stream.slice(dbg!((start + 2)..stream.peek_position()));
+            let slice = stream.slice((start + 2)..stream.peek_position());
             stream.chomp_peeks();
             if slice.is_empty() {
                 let location = Location::new(file_id, Span::new(start, stream.peek_position()));
@@ -195,7 +193,7 @@ pub trait Lex<T: Token<K>, K> {
         let start = self.char_stream().position();
         loop {
             match self.chomp() {
-                Some(c) if matches!(c, '\n' | '\r') => {
+                Some('\n' | '\r') => {
                     break;
                 }
                 Some(_) => {}

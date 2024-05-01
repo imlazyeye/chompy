@@ -21,9 +21,7 @@ impl CharStream {
 
     /// Returns the next char in the stream and advances forward.
     pub fn chomp(&mut self) -> Option<char> {
-        let Some(next) = self.iter.next() else {
-            return None;
-        };
+        let next = self.iter.next()?;
         self.true_cursor += 1;
         self.peek_cursor = self.true_cursor;
         Some(next)
