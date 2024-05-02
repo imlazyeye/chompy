@@ -129,18 +129,14 @@ macro_rules! define_diag {
 
         impl std::fmt::Debug for $ty {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                let output =
-                    &<$ty as $crate::diagnostics::Diag>::build(
-                        &self,
-                        $crate::diagnostics::Builder::new(
-                            <$ty as $crate::diagnostics::Diag>::severity(&self)
-                        )
-                    )
-                        .labels
-                        .iter()
-                        .map(|v| v.message.clone());
+                let diag = <$ty as $crate::diagnostics::Diag>::build(
+                    &self,
+                    $crate::diagnostics::Builder::new(<$ty as chompy::diagnostics::Diag>::severity(&self)),
+                );
 
-                f.pad(itertools::join(output, ", "))
+                let output = diag.labels.iter().map(|v| v.message.clone());
+
+                f.pad(&itertools::join(output, ", "))
             }
         }
     };
