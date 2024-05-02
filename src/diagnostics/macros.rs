@@ -129,8 +129,7 @@ macro_rules! define_diag {
 
         impl std::fmt::Debug for $ty {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                let v =
-                f.pad(
+                let output =
                     &<$ty as $crate::diagnostics::Diag>::build(
                         &self,
                         $crate::diagnostics::Builder::new(
@@ -140,8 +139,8 @@ macro_rules! define_diag {
                         .labels
                         .iter()
                         .map(|v| v.message.clone());
-                );
-                itertools::join(v, ", "),
+
+                f.pad(itertools::join(output, ", "))
             }
         }
     };
