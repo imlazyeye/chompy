@@ -18,3 +18,4 @@ pretty_assertions = "1.1"
 hashbrown = { version = "0.13", features = ["serde"] }
 static_assertions = "1.1"
 peekmore = "1"
+itertools = "0.12"
