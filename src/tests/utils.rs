@@ -1,8 +1,10 @@
 use crate::{
-    lex::{CharStream, Lex, LexError, Tok, TokenKind},
+    diagnostics::Result,
+    lex::{CharStream, Lex, Tok, TokenKind, UnexpectedChar},
     utils::{Location, Span},
 };
 
+/// Test macro for token lexing.
 #[macro_export]
 macro_rules! test_tok_match {
     ($name:ident: $src:expr => $($should_be:expr), * $(,)?) => {
@@ -21,6 +23,7 @@ macro_rules! test_tok_match {
     };
 }
 
+/// Test macro for token mismatches.
 #[macro_export]
 macro_rules! test_tok_mismatch {
     ($name:ident: $src:expr => $($should_be:expr), * $(,)?) => {
@@ -40,6 +43,7 @@ macro_rules! test_tok_mismatch {
     };
 }
 
+/// Macro test for specific lex errors.
 #[macro_export]
 macro_rules! test_lex_err {
     ($name:ident: $src:expr => $should_be:expr) => {
@@ -78,7 +82,7 @@ impl Lex<Tok<TokKind>, TokKind> for Lexer {
         &mut self.char_stream
     }
 
-    fn lex(&mut self) -> Result<Option<Tok<TokKind>>, LexError> {
+    fn lex(&mut self) -> Result<Option<Tok<TokKind>>> {
         let start_pos = self.char_stream.position();
         if self.char_stream.match_chomp_with(|c| c.is_whitespace()) {
             return self.lex();
@@ -110,10 +114,11 @@ impl Lex<Tok<TokKind>, TokKind> for Lexer {
                 }
                 ';' => TokKind::SemiColon,
                 _ => {
-                    return Err(LexError::UnexpectedChar(Location::new(
+                    return Err(UnexpectedChar(Location::new(
                         self.file_id,
                         Span::new(start_pos, self.char_stream.position()),
-                    )));
+                    ))
+                    .into());
                 }
             }
         } else {

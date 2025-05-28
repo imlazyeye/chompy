@@ -1,10 +1,16 @@
-use crate::utils::{FileId, Location, Span};
+use crate::{
+    diagnostics::Result,
+    utils::{FileId, Location, Span},
+};
 
-use super::{CharStream, Token};
+use super::{
+    CharStream, Token, TokenKind,
+    errors::{InvalidHex, UnterminatedString},
+};
 
 /// A set of utilities to construct a lexer. After providing the neccesary references, the bulk of
 /// your lexer is written within the `lex` function.
-pub trait Lex<T: Token<K>, K> {
+pub trait Lex<T: Token<K>, K: TokenKind> {
     /// Returns a reference to the source code this lexer is consuming.
     fn source(&self) -> &'static str;
 
@@ -15,7 +21,7 @@ pub trait Lex<T: Token<K>, K> {
     fn file_id(&self) -> FileId;
 
     /// The primary function for lexxing the next token in the stream.
-    fn lex(&mut self) -> Result<Option<T>, LexError>;
+    fn lex(&mut self) -> Result<Option<T>>;
 
     // todo: this should all really be done via deref
 
@@ -51,7 +57,7 @@ pub trait Lex<T: Token<K>, K> {
     fn construct_integer(&mut self, allow_underscore: bool) -> Option<i64> {
         let test = |c: char| -> bool { c.is_ascii_digit() || c == '_' && allow_underscore };
         self.peek()
-            .map_or(false, |c| c.is_ascii_digit())
+            .is_some_and(|c| c.is_ascii_digit())
             .then(|| self.construct(test))
             .and_then(|v| v.replace('_', "").parse::<i64>().ok())
     }
@@ -107,7 +113,7 @@ pub trait Lex<T: Token<K>, K> {
         &mut self,
         quote_chars: &[char],
         escape_chars: &[char],
-    ) -> Option<Result<&'static str, LexError>> {
+    ) -> Option<Result<&'static str>> {
         let file_id = self.file_id();
         let stream = self.char_stream();
         let start = stream.position();
@@ -122,7 +128,7 @@ pub trait Lex<T: Token<K>, K> {
                     None => {
                         let location =
                             Location::new(file_id, Span::new(start, stream.peek_position()));
-                        break Some(Err(LexError::UnterminatedString(location)));
+                        break Some(Err(UnterminatedString(location).into()));
                     }
                     Some(chr) if chr == opening_delim && !in_escape => {
                         let slice = stream.slice((start + 1)..stream.peek_position() - 1);
@@ -141,7 +147,7 @@ pub trait Lex<T: Token<K>, K> {
     ///
     /// If the prefix is not fulfilled None is returned. If the first character following the prefix
     /// is not valid hex, an error is returned within the Some().
-    fn construct_hex(&mut self, prefix: &str) -> Option<Result<&'static str, LexError>> {
+    fn construct_hex(&mut self, prefix: &str) -> Option<Result<&'static str>> {
         let file_id = self.file_id();
         let stream = self.char_stream();
         let start = stream.position();
@@ -154,7 +160,7 @@ pub trait Lex<T: Token<K>, K> {
             stream.chomp_peeks();
             if slice.is_empty() {
                 let location = Location::new(file_id, Span::new(start, stream.peek_position()));
-                Some(Err(LexError::InvalidHex(location)))
+                Some(Err(InvalidHex(location).into()))
             } else {
                 Some(Ok(slice))
             }
@@ -229,14 +235,3 @@ pub trait Lex<T: Token<K>, K> {
     }
 }
 
-/// Errors that can be encountered from the in-built utilities in [Lex].
-#[derive(Debug, Clone, PartialEq)]
-pub enum LexError {
-    /// A string that was never closed before the end of the file.
-    UnterminatedString(Location),
-    /// A series of chars that begun with the hex-prefix but did not subsequently provide valid hex
-    /// chars (i.e.: `0xQRS`).
-    InvalidHex(Location),
-    /// A char which satsified no rules within the lexer.
-    UnexpectedChar(Location),
-}

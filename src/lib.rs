@@ -15,11 +15,21 @@
 /// Tools for creating tokens and lexers.
 pub mod lex {
     mod char_stream;
+    mod errors;
     mod lex;
     mod tok;
     pub use char_stream::*;
+    pub use errors::*;
     pub use lex::*;
     pub use tok::*;
+}
+
+/// Tools for creating parsers.
+pub mod parse {
+    mod errors;
+    mod parse;
+    pub use errors::*;
+    pub use parse::*;
 }
 
 /// Common utilities shared across the different elements of chompy.

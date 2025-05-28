@@ -13,7 +13,7 @@ pub trait Diag: Debug + Send + Sync {
     fn build(&self, builder: Builder) -> Builder;
 }
 
-/// Alias for a Result that returns FogErr's.
+/// Alias for a Result that returns DiagBox's.
 pub type Result<T> = std::result::Result<T, DiagBox>;
 
 /// Container for dynamically dispatched implementers of [Diag].
