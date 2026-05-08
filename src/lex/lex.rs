@@ -136,7 +136,7 @@ pub trait Lex<T: Token<K>, K: TokenKind> {
                         break Some(Ok(slice));
                     }
                     Some(chr) if escape_chars.contains(&chr) && !in_escape => in_escape = true,
-                    _ => {}
+                    _ => in_escape = false,
                 }
             }
         }
@@ -234,4 +234,3 @@ pub trait Lex<T: Token<K>, K: TokenKind> {
         stream.chomp_peeks()
     }
 }
-
