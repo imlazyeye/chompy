@@ -37,6 +37,7 @@ impl From<Severity> for diagnostic::Severity {
 }
 
 /// A wrapper for [diagnostic::Diagnostic] to assist in writing diagnostics laconically.
+#[derive(Debug, PartialEq)]
 pub struct Builder(diagnostic::Diagnostic<FileId>);
 impl Builder {
     /// Creates a new Builder with the provided [Severity].

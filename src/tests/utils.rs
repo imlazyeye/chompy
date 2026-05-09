@@ -43,16 +43,25 @@ macro_rules! test_tok_mismatch {
     };
 }
 
-/// Macro test for specific lex errors.
+/// Macro test for specific lex errors. We're just checking the primary label which is a bit lazy,
+/// but DiagBox is not PartialEq.
 #[macro_export]
 macro_rules! test_lex_err {
     ($name:ident: $src:expr => $should_be:expr) => {
         #[cfg(test)]
         #[test]
         fn $name() {
-            use $crate::lex::Lex;
+            use $crate::{
+                diagnostics::{Builder, Diag},
+                lex::Lex,
+            };
             let mut lexer = $crate::tests::utils::Lexer::new($src);
-            pretty_assertions::assert_eq!(Err($should_be), lexer.lex());
+            pretty_assertions::assert_eq!(
+                Err($should_be.build(Builder::new($should_be.severity()))),
+                lexer
+                    .lex()
+                    .map_err(|e| e.as_ref().build(Builder::new(e.severity())))
+            );
         }
     };
 }

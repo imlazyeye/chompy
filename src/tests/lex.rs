@@ -1,4 +1,8 @@
-use crate::{lex::Token, test_tok_match, test_tok_mismatch, tests::utils::TokKind::*};
+#[cfg(test)]
+use crate::utils::Location;
+use crate::{
+    lex::Token, test_lex_err, test_tok_match, test_tok_mismatch, tests::utils::TokKind::*,
+};
 
 test_tok_match!(semicolon: ";" => SemiColon);
 test_tok_match!(equal: "=" => Equal);
@@ -37,10 +41,9 @@ test_tok_match!(
     "// hello\n/// there\n// !" => Comment("// hello\n/// there\n// !")
 );
 
-// test_lex_err!(unknown: "$" => crate::lex::UnexpectedChar(Location::new(0, 0..1)).into());
-// test_lex_err!(unterminated_string: "'foo" => crate::lex::UnterminatedString(Location::new(0,
-// 0..5).into())); test_lex_err!(mismatch_string_delimiter: "'foo\"" =>
-// crate::lex::UnterminatedString(Location::new(0, 0..6).into()));
+test_lex_err!(unknown: "$" => crate::lex::UnexpectedChar(Location::new(0, 0..1)));
+test_lex_err!(unterminated_string: "'foo" => crate::lex::UnterminatedString(Location::new(0, 0..5)));
+test_lex_err!(mismatch_string_delimiter: "'foo\"" => crate::lex::UnterminatedString(Location::new(0, 0..6)));
 test_tok_mismatch!(underscore_first_int: "_0" => Int(0));
 test_tok_mismatch!(underscore_first_float: "_0.0" => Float(0.0));
 
