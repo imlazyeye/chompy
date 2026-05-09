@@ -109,6 +109,14 @@ pub trait Lex<T: Token<K>, K: TokenKind> {
     /// reached before a closing quote is found, an error is returned within a Some().
     ///
     /// The returned slice includes the opening and closing quotations.
+    ///
+    /// ## Caveats
+    ///
+    /// Because chompy is designed to only return static/copy results, this does _not_ use your
+    /// provided escape chars to escape anything _except_ your quotations. This means that
+    /// characters like '\n' and '\r' will be retained as two individual characters in the string
+    /// returned. We instead provide a utility, [utils::unescape], to filter those escapes into a newly
+    /// allocated String.
     fn construct_string(
         &mut self,
         quote_chars: &[char],

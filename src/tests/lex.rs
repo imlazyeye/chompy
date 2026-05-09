@@ -43,3 +43,23 @@ test_tok_match!(
 // crate::lex::UnterminatedString(Location::new(0, 0..6).into()));
 test_tok_mismatch!(underscore_first_int: "_0" => Int(0));
 test_tok_mismatch!(underscore_first_float: "_0.0" => Float(0.0));
+
+#[test]
+fn unescape() {
+    assert_eq!(
+        "hello\nworld!",
+        crate::utils::unescape("hello\\nworld!", &['\\'], &['"'])
+    );
+    assert_eq!(
+        "carriage!\r",
+        crate::utils::unescape("carriage!\\r", &['\\'], &['"'])
+    );
+    assert_eq!(
+        "\ttabbed!",
+        crate::utils::unescape("\\ttabbed!", &['\\'], &['"'])
+    );
+    assert_eq!(
+        "null!\0",
+        crate::utils::unescape("null!\\0", &['\\'], &['"'])
+    );
+}

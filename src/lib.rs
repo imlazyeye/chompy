@@ -36,8 +36,10 @@ pub mod parse {
 pub mod utils {
     mod files;
     mod location;
+    mod unescape;
     pub use files::*;
     pub use location::*;
+    pub use unescape::*;
 }
 
 /// Handles the creation and management of user-driven errors with chompy.
