@@ -62,40 +62,86 @@ pub trait Lex<T: Token<K>, K: TokenKind> {
             .and_then(|v| v.replace('_', "").parse::<i64>().ok())
     }
 
-    /// Attempts to construct an integer twice with a period inbetween the two.
-    fn construct_float(&mut self, allow_underscore: bool) -> Option<f64> {
+    /// Attempts to construct an integer twice with a period inbetween the two. You can optionally
+    /// allow underscores to appear (which will discard them), and you can optionally allow
+    /// scientific notation in the form `e<digits>`, `e+<digits>`, or `e-<digits>`. For example,
+    /// with scientific notation enabled, '1.5e+02' returns 150.0 and '1.5e-02' returns 0.015.
+    ///
+    /// In the future the scientific-notation marker may become customizable but for now it is
+    /// hardcoded to `e`.
+    fn construct_float(
+        &mut self,
+        allow_underscore: bool,
+        allow_scientific_notation: bool,
+    ) -> Option<f64> {
         let stream = self.char_stream();
         if !stream.match_peek_with(|c| c.is_ascii_digit()) {
-            None
-        } else {
-            let mut found_dot = false;
-            let mut found_trailing_digit = false;
-            let slice = loop {
-                match stream.peek() {
-                    Some('_') if allow_underscore => {}
-                    Some('.') if !found_dot => {
-                        found_dot = true;
-                    }
-                    Some(chr) if chr.is_ascii_digit() => {
-                        if found_dot {
-                            found_trailing_digit = true;
-                        }
-                    }
-                    _ if found_dot && found_trailing_digit => {
-                        break Some(stream.chomp_peeks());
-                    }
-                    _ => break None,
+            return None;
+        }
+
+        let mut found_dot = false;
+        let mut found_trailing_digit = false;
+        let mantissa_slice = loop {
+            match stream.peek() {
+                Some('_') if allow_underscore => {}
+                Some('.') if !found_dot => {
+                    found_dot = true;
                 }
-                stream.advance();
+                Some(chr) if chr.is_ascii_digit() => {
+                    if found_dot {
+                        found_trailing_digit = true;
+                    }
+                }
+                _ if found_dot && found_trailing_digit => {
+                    break stream.chomp_peeks();
+                }
+                _ => {
+                    stream.reset_peeks();
+                    return None;
+                }
+            }
+            stream.advance();
+        };
+
+        let mantissa = mantissa_slice.replace('_', "").parse::<f64>().ok()?;
+
+        if allow_scientific_notation && stream.peek() == Some('e') {
+            stream.advance();
+
+            let negative = match stream.peek() {
+                Some('+') => {
+                    stream.advance();
+                    false
+                }
+                Some('-') => {
+                    stream.advance();
+                    true
+                }
+                _ => false,
             };
 
-            if let Some(float) = slice.and_then(|v| v.replace('_', "").parse::<f64>().ok()) {
-                Some(float)
-            } else {
-                self.char_stream().reset_peeks();
-                None
+            let mut found_exp_digit = false;
+            while stream.match_peek_with(|c| c.is_ascii_digit()) {
+                found_exp_digit = true;
+                stream.advance();
             }
+
+            if found_exp_digit {
+                // chomp_peeks yields "e[+|-]?<digits>"; rely on f64's parser to handle the whole
+                // thing in one shot
+                let suffix = stream.chomp_peeks();
+                if let Ok(exp) = suffix.trim_start_matches(['e', '+', '-']).parse::<i32>() {
+                    let signed = if negative { -exp } else { exp };
+                    return Some(mantissa * 10f64.powi(signed));
+                }
+            }
+
+            // Saw `e` but no valid exponent followed — discard the trial peeks
+            // and fall through with just the mantissa
+            stream.reset_peeks();
         }
+
+        Some(mantissa)
     }
 
     /// Chomps chars to create a string literal. You can provide the char's you allow to open/close

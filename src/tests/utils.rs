@@ -98,7 +98,7 @@ impl Lex<Tok<TokKind>, TokKind> for Lexer {
         }
         let kind = if let Some(hex) = self.construct_hex("0x") {
             TokKind::Hex(hex?)
-        } else if let Some(float) = self.construct_float(true) {
+        } else if let Some(float) = self.construct_float(true, true) {
             TokKind::Float(float)
         } else if let Some(int) = self.construct_integer(true) {
             TokKind::Int(int)
