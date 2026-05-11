@@ -14,18 +14,6 @@ pub enum Severity {
     Warning,
 }
 
-impl std::ops::Deref for Severity {
-    type Target = codespan_reporting::diagnostic::Severity;
-
-    fn deref(&self) -> &Self::Target {
-        match self {
-            Severity::Bug => &diagnostic::Severity::Bug,
-            Severity::Error => &diagnostic::Severity::Error,
-            Severity::Warning => &diagnostic::Severity::Warning,
-        }
-    }
-}
-
 impl From<Severity> for diagnostic::Severity {
     fn from(value: Severity) -> Self {
         match value {
