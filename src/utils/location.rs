@@ -84,13 +84,14 @@ pub trait Located {
     fn span(&self) -> Span {
         self.location().span
     }
+
     /// Returns the file id this item originates from.
     fn file_id(&self) -> FileId {
         self.location().file_id
     }
 
     /// Creates a primary label for diagnostics with this item's information
-    fn primary(&self, message: impl Into<String>) -> Label {
+    fn primary(&self, message: impl std::fmt::Display) -> Label {
         Label::new(
             codespan_reporting::diagnostic::Label::primary(self.file_id(), self.span())
                 .with_message(message),
@@ -98,7 +99,7 @@ pub trait Located {
     }
 
     /// Creates a secondary label for diagnostics with this item's information
-    fn secondary(&self, message: impl Into<String>) -> Label {
+    fn secondary(&self, message: impl std::fmt::Display) -> Label {
         Label::new(
             codespan_reporting::diagnostic::Label::secondary(self.file_id(), self.span())
                 .with_message(message),

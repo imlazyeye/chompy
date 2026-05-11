@@ -2,16 +2,6 @@
 //! to assist with the specific needs of my own projects but aspires to be robust enough to serve
 //! any user interested in creating a parser quickly.
 
-#![warn(missing_docs)]
-#![warn(clippy::dbg_macro)]
-#![warn(clippy::print_stdout)]
-#![warn(clippy::map_unwrap_or)]
-#![warn(clippy::similar_names)]
-#![warn(clippy::todo)]
-#![warn(clippy::unimplemented)]
-#![warn(clippy::undocumented_unsafe_blocks)]
-#![allow(clippy::module_inception)]
-
 /// Tools for creating tokens and lexers.
 pub mod lex {
     mod char_stream;
