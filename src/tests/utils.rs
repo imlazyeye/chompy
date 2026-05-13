@@ -66,14 +66,14 @@ macro_rules! test_lex_err {
     };
 }
 
-pub struct Lexer {
-    source: &'static str,
-    char_stream: CharStream,
+pub struct Lexer<'s> {
+    source: &'s str,
+    char_stream: CharStream<'s>,
     file_id: usize,
 }
 
-impl Lexer {
-    pub fn new(source: &'static str) -> Self {
+impl<'s> Lexer<'s> {
+    pub fn new(source: &'s str) -> Self {
         Self {
             source,
             char_stream: CharStream::new(source),
@@ -82,16 +82,16 @@ impl Lexer {
     }
 }
 
-impl Lex<Tok<TokKind>, TokKind> for Lexer {
-    fn source(&self) -> &'static str {
+impl<'s> Lex<'s, Tok<TokKind<'s>>, TokKind<'s>> for Lexer<'s> {
+    fn source(&self) -> &'s str {
         self.source
     }
 
-    fn char_stream(&mut self) -> &mut CharStream {
+    fn char_stream(&mut self) -> &mut CharStream<'s> {
         &mut self.char_stream
     }
 
-    fn lex(&mut self) -> Result<Option<Tok<TokKind>>> {
+    fn lex(&mut self) -> Result<'s, Option<Tok<TokKind<'s>>>> {
         let start_pos = self.char_stream.position();
         if self.char_stream.match_chomp_with(|c| c.is_whitespace()) {
             return self.lex();
@@ -146,23 +146,23 @@ impl Lex<Tok<TokKind>, TokKind> for Lexer {
 }
 
 #[derive(PartialEq, Clone, Debug)]
-pub enum TokKind {
+pub enum TokKind<'s> {
     Let,
     Const,
     Equal,
     DoubleEqual,
     SemiColon,
-    Ident(&'static str),
+    Ident(&'s str),
     Int(i64),
     Float(f64),
-    String(&'static str),
-    Hex(&'static str),
-    Comment(&'static str),
+    String(&'s str),
+    Hex(&'s str),
+    Comment(&'s str),
 }
 
-impl TokenKind for TokKind {}
+impl TokenKind for TokKind<'_> {}
 
-impl std::fmt::Display for TokKind {
+impl std::fmt::Display for TokKind<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             TokKind::Let => f.pad("let"),

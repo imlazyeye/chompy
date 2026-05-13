@@ -1,7 +1,7 @@
 use std::iter::Peekable;
 
 use crate::{
-    diagnostics::DiagBox,
+    diagnostics::Result,
     lex::{Lex, Token, TokenKind},
     utils::{FileId, Location, Span},
 };
@@ -9,11 +9,11 @@ use crate::{
 use super::errors::{ExpectedToken, UnexpectedEnd};
 
 /// A set of utilities to create a parser.
-pub trait Parse<L, T, K>
+pub trait Parse<'s, L, T, K>
 where
-    L: Lex<T, K> + Iterator<Item = Result<T, DiagBox>> + 'static,
+    L: Lex<'s, T, K> + Iterator<Item = Result<'s, T>>,
     T: Token<K>,
-    K: TokenKind + 'static,
+    K: TokenKind + 's,
 {
     /// Returns a mutable reference to the internal lexer.
     fn lexer(&mut self) -> &mut Peekable<L>;
@@ -39,7 +39,7 @@ where
 
     /// Returns the next Token, returning an error if there is none, or if it is
     /// not of the required type.
-    fn require(&mut self, expected_type: K) -> Result<T, DiagBox> {
+    fn require(&mut self, expected_type: K) -> Result<'s, T> {
         let found_tok = self.take()?;
         if found_tok.kind_ref() == &expected_type {
             Ok(found_tok)
@@ -57,7 +57,11 @@ where
     }
 
     /// Returns the the next Token (or an error if there is none) without advancing the cursor.
-    fn peek(&mut self) -> Result<&T, DiagBox> {
+    fn peek<'a>(&'a mut self) -> Result<'s, &'a T>
+    where
+        L: 'a,
+        's: 'a,
+    {
         let next = self.next_tok_boundary();
         let location = self.location(next);
 
@@ -73,7 +77,11 @@ where
     }
 
     /// Returns the next Token or None without advancing the cursor.
-    fn soft_peek(&mut self) -> Result<Option<&T>, DiagBox> {
+    fn soft_peek<'a>(&'a mut self) -> Result<'s, Option<&'a T>>
+    where
+        L: 'a,
+        's: 'a,
+    {
         if self.lexer().peek().is_some_and(|v| v.is_err()) {
             return Err(self.take().unwrap_err());
         }
@@ -86,7 +94,7 @@ where
     }
 
     /// Returns the next Token, returning an error if there is none.
-    fn take(&mut self) -> Result<T, DiagBox> {
+    fn take(&mut self) -> Result<'s, T> {
         let next = self.next_tok_boundary();
         let location = self.location(next);
         match self.lexer().next() {

@@ -10,18 +10,18 @@ use super::{
 
 /// A set of utilities to construct a lexer. After providing the neccesary references, the bulk of
 /// your lexer is written within the `lex` function.
-pub trait Lex<T: Token<K>, K: TokenKind> {
+pub trait Lex<'s, T: Token<K>, K: TokenKind> {
     /// Returns a reference to the source code this lexer is consuming.
-    fn source(&self) -> &'static str;
+    fn source(&self) -> &'s str;
 
     /// Returns a reference to the iterator over the characters of the source.
-    fn char_stream(&mut self) -> &mut CharStream;
+    fn char_stream(&mut self) -> &mut CharStream<'s>;
 
     /// Returns the [crate::utils::FileId] of the file this lexer is working within.
     fn file_id(&self) -> FileId;
 
     /// The primary function for lexxing the next token in the stream.
-    fn lex(&mut self) -> Result<Option<T>>;
+    fn lex(&mut self) -> Result<'s, Option<T>>;
 
     // todo: this should all really be done via deref
 
@@ -45,7 +45,7 @@ pub trait Lex<T: Token<K>, K: TokenKind> {
 
     /// Chomps every char that is either alphanumeric or an underscore, returning the resulting
     /// slice. If the first char found is not alphanumeric, None is returned.
-    fn construct_ident(&mut self) -> Option<&'static str> {
+    fn construct_ident(&mut self) -> Option<&'s str> {
         let test = |c: char| -> bool { c.is_alphanumeric() || c == '_' };
         self.char_stream()
             .match_peek_with(test)
@@ -158,7 +158,7 @@ pub trait Lex<T: Token<K>, K: TokenKind> {
     ///
     /// ## Caveats
     ///
-    /// Because chompy is designed to only return static/copy results, this does _not_ use your
+    /// Because chompy is designed to only return source-borrowed/copy results, this does _not_ use your
     /// provided escape chars to escape anything _except_ your quotations. This means that
     /// characters like '\n' and '\r' will be retained as two individual characters in the string
     /// returned. We instead provide a utility, [utils::unescape], to filter those escapes into a newly
@@ -167,7 +167,7 @@ pub trait Lex<T: Token<K>, K: TokenKind> {
         &mut self,
         quote_chars: &[char],
         escape_chars: &[char],
-    ) -> Option<Result<&'static str>> {
+    ) -> Option<Result<'s, &'s str>> {
         let file_id = self.file_id();
         let stream = self.char_stream();
         let start = stream.position();
@@ -201,7 +201,7 @@ pub trait Lex<T: Token<K>, K: TokenKind> {
     ///
     /// If the prefix is not fulfilled None is returned. If the first character following the prefix
     /// is not valid hex, an error is returned within the Some().
-    fn construct_hex(&mut self, prefix: &str) -> Option<Result<&'static str>> {
+    fn construct_hex(&mut self, prefix: &str) -> Option<Result<'s, &'s str>> {
         let file_id = self.file_id();
         let stream = self.char_stream();
         let start = stream.position();
@@ -224,7 +224,7 @@ pub trait Lex<T: Token<K>, K: TokenKind> {
     /// Chomps every char that follows the prefix. This will continue across multiple lines, meaning
     /// if you call this with two lines of comments ahead of you, both will be returned in this
     /// one call.
-    fn construct_comment(&mut self, prefixes: &[&str]) -> Option<&'static str> {
+    fn construct_comment(&mut self, prefixes: &[&str]) -> Option<&'s str> {
         let start = self.char_stream().position();
         let mut found_any = false;
         loop {
@@ -249,7 +249,7 @@ pub trait Lex<T: Token<K>, K: TokenKind> {
     }
 
     /// Chomps every char until a newline is reached, returning the resulting slice.
-    fn chomp_line(&mut self) -> &'static str {
+    fn chomp_line(&mut self) -> &'s str {
         let start = self.char_stream().position();
         loop {
             match self.chomp() {
@@ -279,7 +279,7 @@ pub trait Lex<T: Token<K>, K: TokenKind> {
 
     /// Chomps every char that fulfills the provided closure, then returns a slice of the chars
     /// from the provided start position to the final position reached.
-    fn construct<F>(&mut self, mut f: F) -> &'static str
+    fn construct<F>(&mut self, mut f: F) -> &'s str
     where
         F: FnMut(char) -> bool,
     {

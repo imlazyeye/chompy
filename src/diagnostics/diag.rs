@@ -14,28 +14,28 @@ pub trait Diag: Debug + Send + Sync {
 }
 
 /// Alias for a Result that returns DiagBox's.
-pub type Result<T> = std::result::Result<T, DiagBox>;
+pub type Result<'d, T> = std::result::Result<T, DiagBox<'d>>;
 
 /// Container for dynamically dispatched implementers of [Diag].
-pub struct DiagBox(Box<dyn Diag + Send + Sync>);
+pub struct DiagBox<'d>(Box<dyn Diag + Send + Sync + 'd>);
 
-impl std::fmt::Debug for DiagBox {
+impl std::fmt::Debug for DiagBox<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)
     }
 }
 
-impl<E> From<E> for DiagBox
+impl<'d, E> From<E> for DiagBox<'d>
 where
-    E: Diag + 'static,
+    E: Diag + 'd,
 {
     fn from(value: E) -> Self {
         DiagBox(Box::new(value))
     }
 }
 
-impl std::ops::Deref for DiagBox {
-    type Target = Box<dyn Diag + Send + Sync>;
+impl<'d> std::ops::Deref for DiagBox<'d> {
+    type Target = Box<dyn Diag + Send + Sync + 'd>;
 
     fn deref(&self) -> &Self::Target {
         &self.0

@@ -7,16 +7,16 @@ pub type FileId = usize;
 /// Holds onto the references of the loaded source code to be looked up for diagnostics,
 /// and to later clean up all memory. Used to interact with codespan via codespan's [Files].
 #[derive(Debug, Default)]
-pub struct Library(Vec<SimpleFile<String, &'static str>>);
-impl Library {
+pub struct Library<'s>(Vec<SimpleFile<String, &'s str>>);
+impl<'s> Library<'s> {
     /// Create a new Library.
-    pub fn new() -> Library {
+    pub fn new() -> Library<'s> {
         Library(Vec::new())
     }
 
     /// Add a file to the library, returning the handle that can be used to
     /// refer to it again.
-    pub fn add(&mut self, name: String, source: &'static str) -> usize {
+    pub fn add(&mut self, name: String, source: &'s str) -> usize {
         let file_id = self.0.len();
         self.0.push(SimpleFile::new(name, source));
         file_id
@@ -26,11 +26,11 @@ impl Library {
     ///
     /// ### Errors
     /// Returns an error if the file is not found.
-    pub fn get(&self, file_id: usize) -> Result<&SimpleFile<String, &'static str>, Error> {
+    pub fn get(&self, file_id: usize) -> Result<&SimpleFile<String, &'s str>, Error> {
         self.0.get(file_id).ok_or(Error::FileMissing)
     }
 }
-impl<'a> Files<'a> for Library {
+impl<'a, 's: 'a> Files<'a> for Library<'s> {
     type FileId = FileId;
     type Name = String;
     type Source = &'a str;

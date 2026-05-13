@@ -3,15 +3,15 @@ use std::{ops::RangeBounds, str::Chars};
 
 /// A wrapper of the needed iterators for [Lex]'s char stream.
 #[derive(Debug, Clone)]
-pub struct CharStream {
-    source: &'static str,
-    iter: PeekMoreIterator<Chars<'static>>,
+pub struct CharStream<'s> {
+    source: &'s str,
+    iter: PeekMoreIterator<Chars<'s>>,
     peek_cursor: usize,
     true_cursor: usize,
 }
-impl CharStream {
+impl<'s> CharStream<'s> {
     /// Creates a new CharStream out of the provided source material.
-    pub fn new(source: &'static str) -> Self {
+    pub fn new(source: &'s str) -> Self {
         Self {
             source,
             iter: source.chars().peekmore(),
@@ -91,7 +91,7 @@ impl CharStream {
     /// Chomps every char between the true cursor and peek cursor, returning a slice of the chomped
     /// chars. You can think of this as "fast forwarding" the true cursor to the position of the
     /// peek cursor.
-    pub fn chomp_peeks(&mut self) -> &'static str {
+    pub fn chomp_peeks(&mut self) -> &'s str {
         let slice = self.inspect_peeks();
         self.iter.truncate_iterator_to_cursor();
         self.true_cursor = self.peek_cursor;
@@ -100,14 +100,14 @@ impl CharStream {
 
     /// Resets the peek cursor after returning a slice of everything between the true cursor and
     /// peek cursor.
-    pub fn empty_peeks(&mut self) -> &'static str {
+    pub fn empty_peeks(&mut self) -> &'s str {
         let slice = self.inspect_peeks();
         self.reset_peeks();
         slice
     }
 
     /// Returns a slice of everything between the true cursor and peek cursor.
-    pub fn inspect_peeks(&mut self) -> &'static str {
+    pub fn inspect_peeks(&mut self) -> &'s str {
         let forward_position = std::cmp::min(self.source.len(), self.peek_cursor);
         self.slice(self.true_cursor..forward_position)
     }
@@ -140,7 +140,7 @@ impl CharStream {
     }
 
     /// Returns a slice of the source within the provided range.
-    pub fn slice<R>(&self, range: R) -> &'static str
+    pub fn slice<R>(&self, range: R) -> &'s str
     where
         R: RangeBounds<usize> + std::slice::SliceIndex<str, Output = str>,
     {
@@ -148,7 +148,7 @@ impl CharStream {
     }
 
     /// Returns a reference to the CharStream's source.
-    pub fn source(&self) -> &str {
+    pub fn source(&self) -> &'s str {
         self.source
     }
 }
