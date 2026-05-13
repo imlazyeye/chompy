@@ -7,6 +7,8 @@ description = "A series of utilities used to create parsers"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/imlazyeye/chompy"
 readme = "README.md"
+keywords = ["parser", "lexer", "lexing", "tokens", "diagnostics"]
+categories = ["parsing"]
 
 [lints]
     rust.missing_docs = "warn"
