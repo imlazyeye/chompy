@@ -11,7 +11,7 @@ use super::errors::{ExpectedToken, UnexpectedEnd};
 /// A set of utilities to create a parser.
 pub trait Parse<'s, L, T, K>
 where
-    L: Lex<'s, T, K> + Iterator<Item = Result<'s, T>>,
+    L: Lex<'s, T, K> + Iterator<Item = Result<T>>,
     T: Token<K>,
     K: TokenKind + 's,
 {
@@ -39,12 +39,12 @@ where
 
     /// Returns the next Token, returning an error if there is none, or if it is
     /// not of the required type.
-    fn require(&mut self, expected_type: K) -> Result<'s, T> {
+    fn require(&mut self, expected_type: K) -> Result<T> {
         let found_tok = self.take()?;
         if found_tok.kind_ref() == &expected_type {
             Ok(found_tok)
         } else {
-            Err(ExpectedToken(expected_type, found_tok.location()).into())
+            Err(ExpectedToken(expected_type.to_string(), found_tok.location()).into())
         }
     }
 
@@ -57,7 +57,7 @@ where
     }
 
     /// Returns the the next Token (or an error if there is none) without advancing the cursor.
-    fn peek<'a>(&'a mut self) -> Result<'s, &'a T>
+    fn peek<'a>(&'a mut self) -> Result<&'a T>
     where
         L: 'a,
         's: 'a,
@@ -77,7 +77,7 @@ where
     }
 
     /// Returns the next Token or None without advancing the cursor.
-    fn soft_peek<'a>(&'a mut self) -> Result<'s, Option<&'a T>>
+    fn soft_peek<'a>(&'a mut self) -> Result<Option<&'a T>>
     where
         L: 'a,
         's: 'a,
@@ -94,7 +94,7 @@ where
     }
 
     /// Returns the next Token, returning an error if there is none.
-    fn take(&mut self) -> Result<'s, T> {
+    fn take(&mut self) -> Result<T> {
         let next = self.next_tok_boundary();
         let location = self.location(next);
         match self.lexer().next() {

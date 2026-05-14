@@ -21,7 +21,7 @@ pub trait Lex<'s, T: Token<K>, K: TokenKind> {
     fn file_id(&self) -> FileId;
 
     /// The primary function for lexxing the next token in the stream.
-    fn lex(&mut self) -> Result<'s, Option<T>>;
+    fn lex(&mut self) -> Result<Option<T>>;
 
     // todo: this should all really be done via deref
 
@@ -167,7 +167,7 @@ pub trait Lex<'s, T: Token<K>, K: TokenKind> {
         &mut self,
         quote_chars: &[char],
         escape_chars: &[char],
-    ) -> Option<Result<'s, &'s str>> {
+    ) -> Option<Result<&'s str>> {
         let file_id = self.file_id();
         let stream = self.char_stream();
         let start = stream.position();
@@ -201,7 +201,7 @@ pub trait Lex<'s, T: Token<K>, K: TokenKind> {
     ///
     /// If the prefix is not fulfilled None is returned. If the first character following the prefix
     /// is not valid hex, an error is returned within the Some().
-    fn construct_hex(&mut self, prefix: &str) -> Option<Result<'s, &'s str>> {
+    fn construct_hex(&mut self, prefix: &str) -> Option<Result<&'s str>> {
         let file_id = self.file_id();
         let stream = self.char_stream();
         let start = stream.position();

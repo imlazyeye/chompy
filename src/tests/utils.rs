@@ -91,7 +91,7 @@ impl<'s> Lex<'s, Tok<TokKind<'s>>, TokKind<'s>> for Lexer<'s> {
         &mut self.char_stream
     }
 
-    fn lex(&mut self) -> Result<'s, Option<Tok<TokKind<'s>>>> {
+    fn lex(&mut self) -> Result<Option<Tok<TokKind<'s>>>> {
         let start_pos = self.char_stream.position();
         if self.char_stream.match_chomp_with(|c| c.is_whitespace()) {
             return self.lex();
