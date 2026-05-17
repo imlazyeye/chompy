@@ -10,6 +10,12 @@ pub struct Location {
     span: Span,
 }
 impl Location {
+    /// Representation for a non-existent location for synthetic symbols generated at compile time.
+    pub const SYNTHETIC: Self = Self {
+        file_id: u32::MAX as usize,
+        span: Span::SYNTHETIC,
+    };
+
     /// Creates a new location with the given [FileId] and [Span].
     pub fn new(file_id: FileId, span: impl Into<Span>) -> Self {
         Self {
@@ -27,6 +33,11 @@ impl Location {
     pub fn file_id(&self) -> FileId {
         self.file_id
     }
+
+    /// Returns if this is a synthetic location (see [Location::SYNTHETIC]);
+    pub fn is_synthetic(&self) -> bool {
+        self == &Self::SYNTHETIC
+    }
 }
 
 impl Located for Location {
@@ -40,6 +51,9 @@ impl Located for Location {
 #[derive(Debug, PartialEq, Eq, Default, Copy, Clone, Hash)]
 pub struct Span(usize, usize);
 impl Span {
+    /// Representation for a non-existent location for synthetic symbols generated at compile time.
+    pub const SYNTHETIC: Self = Self(u32::MAX as usize, u32::MAX as usize);
+
     /// Creates a new span.
     pub fn new(start: usize, end: usize) -> Self {
         // assert!(
@@ -62,6 +76,11 @@ impl Span {
     /// Creates a new span between this one's start and the provided one's end.
     pub fn until(&self, other: Self) -> Self {
         Self::new(self.0, other.1)
+    }
+
+    /// Returns if this is a synthetic span (see [Span::SYNTHETIC]);
+    pub fn is_synthetic(&self) -> bool {
+        self == &Self::SYNTHETIC
     }
 }
 impl From<Span> for Range<usize> {
